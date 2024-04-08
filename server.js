@@ -210,7 +210,7 @@ io.on("connection", (socket) => {
 
       io.emit("success", "Sikeres hozzászólás!");
       const story = await Story.findOne({ _id: id }, { hozzaszolasok: 1 });
-      const hozzaszolasok = story.hozzaszolasok;
+      const hozzaszolasok = story.hozzaszolasok.reverse();
       io.emit("hozzaszolasok", { id, hozzaszolasok });
     } catch (error) {
       io.emit("error", "Sikertelen hozzászólás!");
@@ -222,7 +222,7 @@ io.on("connection", (socket) => {
       const id = msg;
       const story = await Story.findOne({ _id: id }, { hozzaszolasok: 1 });
 
-      const hozzaszolasok = story.hozzaszolasok;
+      const hozzaszolasok = story.hozzaszolasok.reverse();
       io.emit("hozzaszolasok", { id, hozzaszolasok });
     } catch (error) {
       socket.emit("error", "Nem érhetőek el a hozzászólások");
