@@ -578,6 +578,100 @@ app.post("/valtoztat", async (req, res) => {
 //AUTHENTICATED ROUTES
 app.use(requireAuth);
 
+//REPORT
+app.post("/jelent", async (req, res) => {
+  try {
+    const { email, felhasznalonev, jelentesSzoveg, cim, id } = req.body;
+    const transporter = nodemailer.createTransport({
+      service: process.env.SERVICE,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASS,
+      },
+    });
+ 
+    const mailOptions = {
+      from: email,
+      to: process.env.EMAIL,
+      subject: "Hiba jelentés",
+      text: `Hibát találtam (${felhasznalonev}) a "${cim}" című sztoriban`,
+      html: `<html>
+      <head>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 30px;
+            width: 600px;
+          }
+          h1 {
+            color: #363061;
+            text-align: center;
+            font-weight: 800;
+          }
+          h2 {
+            color: #f99417;
+            text-align: center;
+            letter-spacing: 5px;
+          }
+          p {
+            color: #363061;
+            line-height: 1.5;
+            text-align: center;
+          }
+          .image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+          }
+          .image img {
+            width: 200px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Hiba jelentés</h1>
+          <div class="image">
+            <img
+              src="https://res.cloudinary.com/diktrthqs/image/upload/v1704896270/novelnest-blue-min_oyqxy2.png"
+              alt=""
+              style="display: block; margin: 0 auto"
+            />
+          </div>
+          <p>
+            ${jelentesSzoveg}
+          </p>
+          <h2>Link a sztorihoz</h2>
+          <p>http://novelnest.nhely.hu/story/${id}</p>
+        </div>
+      </body>
+    </html>`,
+    };
+ 
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("Hiba az email küldésekor:", error.message);
+      } else {
+        console.log("Elküldve:", info.response);
+      }
+    });
+ 
+    res.status(200).json({ msg: "Sikeres jelentés! "});
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
 //PROFILES
 app.get(`/userinfo/:felhasznalonevKuld`, async (req, res) => {
   try {
@@ -1105,10 +1199,12 @@ app.get("/getInfos", async (req, res) => {
       { felhasznalonev },
       {
         profilkep: 1,
+        email: 1,
       }
     );
     const profilkep = user.profilkep;
-    res.status(200).json({ isAdmin, felhasznalonev, profilkep });
+    const email = user.email;
+    res.status(200).json({ isAdmin, felhasznalonev, profilkep, email });
   } catch (error) {
     res.status(500).json({ msg: "Valami hiba történt: " + error.message });
   }
